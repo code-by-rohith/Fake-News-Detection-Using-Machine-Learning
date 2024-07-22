@@ -1,0 +1,5 @@
+CREATE TABLE  search_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    term TEXT NOT NULL,
+    result TEXT NOT NULL
+);

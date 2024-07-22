@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.4/xlsx.full.min.js"></script> <!-- SheetJS library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js library -->
+    <style>
+        /* Add your custom CSS styles here */
+        video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ffffff;
+            border-right: 1px solid #ffffff; /* Add border-right for column lines */
+            color: #ddd;
+        }
+        th {
+            background-color: #000000;
+        }
+        .search-history-btn {
+            margin-right: 10px;
+            color: white;
+        }
+        .delete-all-btn {
+            margin-bottom: 10px;
+            background-color: red;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .download-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay loop muted>
+        <source src="{{ url_for('static', filename='video.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h1>FAKE NEWS DETECTION USING MACHINE LEARNING</h1>
+    <form id="prediction-form" action="/predict" method="post">
+        <textarea id="search-input" name="text" rows="4" cols="50" placeholder="Enter a news article"></textarea>
+        <br>
+        <input id="predict-btn" type="submit" value="Predict">
+    </form>
+    <div id="result-container" style="display: none;">
+        <p id="result"></p>
+        <img id="plot" alt="Probability Distribution">
+        <div class="additional-reports">
+            <h2>Reports</h2>
+            <p>Precision: <span id="precision"></span></p>
+            <p>Recall: <span id="recall"></span></p>
+            <p>F1 Score: <span id="f1"></span></p>
+        </div>
+        
+    </div>
+
+    <!-- Search history section -->
+    <div id="search-history">
+        <h2>Search History</h2>
+        <button class="delete-all-btn" onclick="deleteAllEntries()">Delete All</button> <!-- Delete all button -->
+        <button class="download-btn" onclick="downloadTable()">Download as Excel</button> <!-- Download button -->
+        <table id="search-history-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Probability</th>
+                    <th>True/Fake</th>
+                </tr>
+            </thead>
+            <tbody id="search-history-rows"></tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Restore search history from local storage on page load
+        $(document).ready(function() {
+            var searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            displaySearchHistory(searchHistory);
+        });
+
+        // Smooth transition for predict button and result
+        $(document).on('submit', '#prediction-form', function(event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+            $('#predict-btn').prop('disabled', true);
+            $('#result-container').addClass('fade-in');
+            $.ajax({
+                type: 'POST',
+                url: '/predict',
+                data: formData,
+                success: function(response) {
+                    $('#result').html(response.result);
+                    $('#plot').attr('src', 'data:image/png;base64,' + response.plot_url).show();
+                    $('#precision').html(response.precision);
+                    $('#recall').html(response.recall);
+                    $('#f1').html(response.f1);
+                    $('.additional-reports').show();
+                    $('#result-container').show();
+                    $('#convert-btn').show();
+                    // Set hidden input fields with prediction results
+                    $('#result-hidden').val(response.result);
+                    $('#plot_url-hidden').val(response.plot_url);
+                    $('#precision-hidden').val(response.precision);
+                    $('#recall-hidden').val(response.recall);
+                    $('#f1-hidden').val(response.f1);
+                    // Update search history
+                    updateSearchHistory($('#search-input').val(), response.result);
+                },
+                error: function(error) {
+                    console.log(error);
+                },
+                complete: function() {
+                    $('#predict-btn').prop('disabled', false);
+                }
+            });
+        });
+
+        // Update search history in local storage
+        function updateSearchHistory(searchTerm, result) {
+            var searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            // Add the new search term and result to the beginning of the array
+            searchHistory.unshift({ term: searchTerm, result: result });
+            // Keep only the latest 100 search terms
+            searchHistory = searchHistory.slice(0, 100);
+            // Save the updated search history to local storage
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+            // Display the updated search history
+            displaySearchHistory(searchHistory);
+        }
+
+        // Display search history in table format
+        function displaySearchHistory(searchHistory) {
+            var searchHistoryRows = $('#search-history-rows');
+            searchHistoryRows.empty(); // Clear previous rows
+            searchHistory.forEach(function(entry) {
+                var truncatedTitle = entry.term.length > 70 ? entry.term.substring(0, 67) + "..." : entry.term;
+                var row = $('<tr>');
+                row.append($('<td>').text(truncatedTitle)); // Display truncated title
+                // Extract only the probability value without the preceding text
+                var probabilityValue = entry.result.match(/\d+\.\d+/);
+                row.append($('<td>').text(probabilityValue)); // Display only the probability value
+                row.append($('<td>').text(entry.result.startsWith("The news is likely to be true") ? 'True' : 'Fake'));
+                searchHistoryRows.append(row);
+            });
+        }
+
+        // Function to delete all search entries
+        function deleteAllEntries() {
+            localStorage.removeItem('searchHistory');
+            $('#search-history-rows').empty();
+        }
+
+        // Function to download the table as an Excel file
+        function downloadTable() {
+            /* Get table HTML and convert to workbook */
+            var wb = XLSX.utils.table_to_book(document.getElementById('search-history-table'), { sheet: "Search History" });
+
+            /* Create Excel file and trigger download */
+            XLSX.writeFile(wb, 'search_history.xlsx');
+        }
+    </script>
+</body>
+</html>

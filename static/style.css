@@ -1,0 +1,126 @@
+/* Body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* Heading styles */
+h1 {
+    text-align: center;
+    color: #ff0000;
+    margin-top: 50px;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+}
+
+/* Form styles */
+form {
+    margin: 20px auto;
+    max-width: 500px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Text area styles */
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    resize: none;
+}
+
+/* Submit button styles */
+input[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Result paragraph styles */
+p {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #28a745;
+    text-align: center;
+}
+
+/* Image styles */
+img {
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+}
+
+/* Additional reports styles */
+.additional-reports {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.additional-reports h2 {
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.additional-reports p {
+    margin: 5px 0;
+    font-weight: bold;
+    color: #28a745;
+}
+
+/* Convert to PDF button container styles */
+#convert-btn, #predict-btn {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Convert to PDF button styles */
+#convert-btn input[type="submit"], #predict-btn input[type="submit"] {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#convert-btn input[type="submit"]:hover, #predict-btn input[type="submit"]:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+}
+
+/* Fade-in animation */
+.fade-in {
+    opacity: 0;
+    animation: fadeInAnimation ease 1s forwards;
+}
+
+@keyframes fadeInAnimation {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
